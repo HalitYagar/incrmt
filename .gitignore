@@ -1,0 +1,38 @@
+# Build products
+*.o
+*.a
+*.exe
+
+# Output Folders
+*.odr
+*.frames
+/output
+
+
+# Generated dependency files
+Makefile.dep
+
+
+# Executables produced by the Makefiles
+/conv_test
+/extrema
+/ftest
+/mg_test
+/sediment
+/tr_analyze
+/tr_unpack
+/levelset/ex_test
+/levelset/growth
+
+
+# Local build configuration
+/config.mk
+
+# Editor and operating-system files
+*~
+*.bak
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+ehthumbs.db
