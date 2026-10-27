@@ -1,6 +1,7 @@
 # Load the common configuration file
 include ../config.mk
 
+cflags += -D_GNU_SOURCE
 iflags=-I../tgmg -I../utils-gp -Ilevelset
 lflags=-Llevelset -L../utils-gp -L.
 
