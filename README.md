@@ -90,6 +90,14 @@ make
 This will build several executables such as **ftest**, **conv_test**, and
 **sediment**.
 
+The configurable circle simulation is run by passing a configuration file to
+**fconfig**:
+```Shell
+OMP_NUM_THREADS=4 ./fconfig sims/circ-move.cfg
+```
+The supplied **circ-move.cfg** file documents all available parameters. Lines
+beginning with `#` are comments, and values use `key = value` syntax.
+
 ## Example
 The simple three-pronged rotor example that described in Appendix C of the
 paper can be run using four threads on a 128&nbsp;&times;&nbsp;128 grid
