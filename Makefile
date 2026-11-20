@@ -8,7 +8,7 @@ lflags=-Llevelset -L../utils-gp -L.
 objs=common.o fluid_2d.o fluid_2d_io.o mgs_common.o mgs_mac.o mgs_fem.o \
 	 sim_type.o object.o obj_field.o bi_interp.o
 src=$(patsubst %.o,%.cc,$(objs))
-execs=mg_test ftest extrema tr_unpack tr_analyze conv_test sediment
+execs=mg_test ftest fconfig extrema tr_unpack tr_analyze conv_test sediment
 
 all:
 	$(MAKE) -C ../utils-gp
@@ -33,6 +33,9 @@ mg_test: mg_test.cc libf2d.a
 ftest: ftest.cc libf2d.a
 	$(cxx) $(cflags) $(iflags) -o $@ $< $(lflags) -lf2d -llevel++
 
+fconfig: fconfig.cc config.o libf2d.a
+	$(cxx) $(cflags) $(iflags) -o $@ fconfig.cc config.o $(lflags) -lf2d -llevel++
+
 sediment: sediment.cc libf2d.a
 	$(cxx) $(cflags) $(iflags) -o $@ $< $(lflags) -lf2d -llevel++
 
@@ -52,6 +55,6 @@ tr_analyze: tr_analyze.cc common.o
 	$(cxx) $(cflags) $(iflags) -c $<
 
 clean:
-	rm -rf $(execs) $(objs) libf2d.a
+	rm -rf $(execs) $(objs) config.o libf2d.a
 
 .PHONY: clean all executables depend
