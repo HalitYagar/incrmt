@@ -1,14 +1,30 @@
 # IncRMT: A C++ implementation of the incompressible reference map technique
-This repository contains an implementation of the incompressible reference map
-technique (RMT), a numerical method for simulating fluid–structure interaction
-problems on a single fixed background grid. The code provided here can perform
-many examples and tests of the method that are described in the following
-scientific publication:
 
+## About this fork
+
+This repository is a personal fork of the original IncRMT codebase, maintained
+by [Halit Yagar](https://github.com/HalitYagar) and [Aisenur Yoldas](https://github.com/yaisenur) as part of a master's thesis.
+Changes made in this fork support the thesis research and may differ from the
+upstream implementation.
+
+The original project was developed by **Chris H. Rycroft, Chen-Hung Wu, Yue
+Yu, and Ken Kamrin**. Please cite and credit the original authors and their
+publication when using the underlying method or code:
+
+- [Original IncRMT repository](https://github.com/chr1shr/incrmt)
 - Chris H. Rycroft, Chen-Hung Wu, Yue Yu, and Ken Kamrin, *Reference map
   technique for incompressible fluid–structure interaction*, Journal of Fluid
   Mechanics **898**, A9 (2020).
   [doi:10.1017/jfm.2020.353](https://doi.org/10.1017/jfm.2020.353)
+
+Unless stated otherwise, the scientific method, original implementation, and
+documentation described below belong to the upstream authors. This fork does
+not replace the original project or claim authorship of their work.
+
+This repository contains an implementation of the incompressible reference map
+technique (RMT), a numerical method for simulating fluid–structure interaction
+problems on a single fixed background grid. The code provided here can perform
+many examples and tests of the method described in the publication cited above.
 
 ## Background
 Fluid–structure interaction problems occur in many scientific and industrial
@@ -32,7 +48,7 @@ The reference map technique (RMT) is a computational method that allows fluids
 and solids to be simulated using a single fixed background grid. This greatly
 simplifies the coupling between the solid and fluid phases. The key idea is to
 introduce a *reference map* field, which tracks where the solid started from,
-and is sufficient to implement large-strain solid mechnics. The original idea
+and is sufficient to implement large-strain solid mechanics. The original idea
 was developed by Kamrin, Nave, and Rycroft [2,3,4], to simulate a single
 compressible solid in a fluid. The numerical methods were subsequently improved
 by Valkov, Rycroft, and Kamrin [5] to simulate multiple solids.
