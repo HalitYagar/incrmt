@@ -1,7 +1,6 @@
 #include <cstdio>
-#include <cstdlib>
-#include <cstring>
 #include <sys/stat.h>
+#include <sstream>
 #include <vector>
 
 #include "config.hh"
@@ -10,8 +9,8 @@
 
 int main(int argc,char **argv) {
 
-    if(argc!=2) {
-        fputs("Syntax: ./fconfig <configuration file>\n",stderr);
+    if(argc!=2&&argc!=3) {
+        fputs("Syntax: ./fconfig <configuration file> [output directory]\n",stderr);
         return 1;
     }
 
@@ -23,7 +22,23 @@ int main(int argc,char **argv) {
     }
 
     int m=config.grid_resolution,n=m;
-    const char *fn=config.output_name.c_str();
+    const char *output_dir=argc==3?argv[2]: "output";
+    mkdir(output_dir,S_IRWXU|S_IRWXG|S_IROTH|S_IXOTH);
+
+    std::ostringstream run_name;
+    run_name<<output_dir<<"/"<<config.output_name;
+
+    std::string fn=run_name.str();
+
+    char *fout=new char[fn.size()+5];
+    sprintf(fout,"%s.odr",fn.c_str());
+    if(mkdir(fout,S_IRWXU|S_IRWXG|S_IROTH|S_IXOTH)!=0) {
+        delete [] fout;
+        fprintf(stderr,"Could not create output directory for this run\n");
+        return 1;
+    }
+
+    const char *filename=fn.c_str();
     std::vector<object*> obj;
 
     // Create object and set non-periodic boundary conditions
@@ -31,18 +46,13 @@ int main(int argc,char **argv) {
                                        config.circle_radius,
                                        config.circle_velocity_x,
                                        config.circle_velocity_y,
-                                       config.circle_angular_velocity,fn));
+                                       config.circle_angular_velocity,filename));
     sim_type sim_t(config.domain_x_min,config.domain_x_max,
                    config.domain_y_min,config.domain_y_max,
                    config.periodic_x,config.periodic_y);
     
 
     // Create a directory for output if one hasn't been created yet
-    char *fout=new char[strlen(fn)+5];
-    sprintf(fout,"%s.odr",fn);
-    mkdir(fout,S_IRWXU|S_IRWXG|S_IROTH|S_IXOTH);
-
-
     // Construct the simulation class and add objects
     fluid_2d f2d(m,n,sim_t,config.viscosity,config.fluid_density,
                 config.transition_width,config.pinning_width,

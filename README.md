@@ -95,8 +95,21 @@ The configurable circle simulation is run by passing a configuration file to
 ```Shell
 OMP_NUM_THREADS=4 ./fconfig sims/circ-move.cfg
 ```
+An optional second argument selects the output directory:
+```Shell
+./fconfig sims/circ-move.cfg output/my-run
+```
+Without the second argument, output is placed in **output/circ-move.odr**.
+It can also be run with the complete plotting workflow:
+```Shell
+./run_simulation.sh sims/circ-move.cfg
+```
 The supplied **circ-move.cfg** file documents all available parameters. Lines
 beginning with `#` are comments, and values use `key = value` syntax.
+Each run creates a timestamped directory inside **output**, for example
+**output/run_20261120_105731**. The script passes this directory to
+**fconfig**, which creates **circ-move.odr** inside it. The configuration and
+generated movie are also stored in the same run directory.
 
 ## Example
 The simple three-pronged rotor example that described in Appendix C of the
