@@ -36,3 +36,4 @@ Makefile.dep
 .DS_Store
 Thumbs.db
 ehthumbs.db
+__pycache__/
