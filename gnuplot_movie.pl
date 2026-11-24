@@ -138,7 +138,7 @@ while(-e "${e}/$ARGV[1].$a") {
     }
 
     # Create temporary Gnuplot file
-    print "Frame $a (thread $P)\n";
+    print ".";
 
     # Make a fork to create the graph
     if(($pid[$P]=fork)==0) {
@@ -190,9 +190,8 @@ wait foreach 1..($queue?$nodes:$P-1);
 # Additional code to automatically make a movie
 unless($opt_w) {
     $mf=$ebase."_".$ARGV[1];
-    unlink "$mf.mov";
-    system "ffmpeg -framerate 30 -y -i $odir/fr_%4d.png -preset veryslow -c:v libx265 -crf 17 -pix_fmt yuv420p -tag:v hvc1 -movflags faststart $mf.mov";
-
+    unlink "$mf.avi";
+    system "ffmpeg -framerate 30 -i $odir/fr_%4d.png -c:v mpeg4 -q:v 3 $mf.avi";
     # Delete the temporary output directory
     system "rm -rf $odir";
 }
