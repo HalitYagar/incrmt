@@ -155,7 +155,8 @@ struct obj_square : public obj_standard {
 class obj_triangle : public obj_standard {
     public:
         const double grav;
-        obj_triangle(double cx_,double cy_,double cr_,double theta,double grav_);
+        obj_triangle(double cx_,double cy_,double cr_,double theta,double grav_,
+                     double uu_=0.,double vv_=0.,double omega_=0.);
         virtual double phi(double X,double Y);
         virtual void accel(double x,double y,double X,double Y,
                            double phiv,double &accx,double &accy);
@@ -443,7 +444,7 @@ struct obj_simple_spin : public obj_track {
         int wind;
         obj_simple_spin(double r_scale_,double a1_,double a2_,double piv_r_,
                         double th_max_,double omega_,const char* filename_) :
-            obj_track(1,10,filename_), scf(r_scale_/(1+a1_+a2_)), c0(scf*(1-a2_)),
+            obj_track(1,10,4,filename_), scf(r_scale_/(1+a1_+a2_)), c0(scf*(1-a2_)),
             c1(scf*a1_), c2(2*scf*a2_), a1(a1_),
             a2(a2_), piv_r(piv_r_), th_max(th_max_), omega(omega_), prev_q(0),
             wind(0) {

@@ -46,6 +46,10 @@ struct field {
         u = 2*f1.u-f2.u;
         v = 2*f1.v-f2.v;
     }
+    /** Sets the velocity to zero. */
+    inline void zero_velocity() {
+        u=v=0;
+    }
 };
 
 struct s_field {
