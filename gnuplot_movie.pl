@@ -190,8 +190,8 @@ wait foreach 1..($queue?$nodes:$P-1);
 # Additional code to automatically make a movie
 unless($opt_w) {
     $mf=$ebase."_".$ARGV[1];
-    unlink "$mf.avi";
-    system "ffmpeg -framerate 30 -i $odir/fr_%4d.png -c:v mpeg4 -q:v 3 $mf.avi";
+    unlink "$mf.mov";
+    system "ffmpeg -framerate 30 -i $odir/fr_%4d.png -c:v mpeg4 -q:v 3 $mf.mov";
     # Delete the temporary output directory
     system "rm -rf $odir";
 }
