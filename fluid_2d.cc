@@ -34,10 +34,11 @@ fluid_2d::fluid_2d(const int m_,const int n_,sim_type &sim_t_,
     xsp(1/dx), ysp(1/dy), xxsp(xsp*xsp), yysp(ysp*ysp), visc(visc_),
     rhof(rhof_), tw(tw_), pinw(pinw_), eps(tw*(dx<dy?dx:dy)), epsinv(1/eps),
     w_scale(sim_t_.w_scale), w_force(sim_t_.w_force), filename(filename_),
-    fbase(new field[ml*nl]), fm(fbase+2*ml+2), tm(new double[ntrace<<2]),
-    src(new double[m_fem*n_fem]), time(0.0), f_num(0), n_obj(0),
-    c_obj(f2d_init_objects), zpr(false), simple_fluid_visc(false),
-    solid_prd_bc(false), olist(new obj_field*[c_obj]), oe(olist),
+    fbase(new field[ml*nl]), fm(fbase+2*ml+2), rigid(NULL),
+    tm(new double[ntrace<<2]), src(new double[m_fem*n_fem]), time(0.0),
+    f_num(0), n_obj(0), c_obj(f2d_init_objects), zpr(false),
+    simple_fluid_visc(false), solid_prd_bc(false),
+    olist(new obj_field*[c_obj]), oe(olist),
     coll(new obj_field**[omp_get_max_threads()]), sim_t(sim_t_),
     buf(new float[m>123?m+5:128]),
     bic(ml,nl,ax-1.5*dx,bx+1.5*dx,ay-1.5*dy,by+1.5*dy,fbase,NULL) {}
@@ -65,6 +66,15 @@ fluid_2d::~fluid_2d() {
     // Free the tracer memory and main grid data structure
     delete [] tm;
     delete [] fbase;
+
+    // Free the rigid object array if it is in use
+    if(rigid!=NULL) delete [] rigid;
+}
+
+/** Initializes the rigid object array. */
+void fluid_2d::init_rigid_objects() {
+    rigid=new bool[mn];
+    for(int i=0;i<mn;i++) rigid[i]=false;
 }
 
 /** Adds an object to the simulation, creating a new obj_field class containing
@@ -357,6 +367,9 @@ void fluid_2d::step_forward(const double& dt) {
 
     // Pin the level set to match the reference map (end of timestep)
     pin();
+
+    // If there are any rigid objects, then zero out the velocity within them
+    set_rigid_objects();
 
     // Reset the ghost points according to the boundary conditions
     set_boundaries();
@@ -682,6 +695,21 @@ inline void fluid_2d::godunov_set_du(int ij) {
             (*op)->sm[ij+ml].Xd=0.5*((*op)->sm[ij].Xu+(*op)->sm[ij+ml].Xd);
             (*op)->sm[ij+ml].Yd=0.5*((*op)->sm[ij].Yu+(*op)->sm[ij+ml].Yd);
         }
+    }
+}
+
+/** Sets the velocity within the rigid boundaries. */
+void fluid_2d::set_rigid_objects() {
+
+    // If we aren't using rigid objects, then immediately return
+    if(rigid==NULL) return;
+
+    // Scan over the grid and zero out the velocity inside any rigid object
+#pragma omp parallel for
+    for(int j=0;j<n;j++) {
+        bool *rp=rigid+m*j;
+        for(int i=0;i<m;i++,rp++) if(*rp)
+            fm[i+ml*j].zero_velocity();
     }
 }
 

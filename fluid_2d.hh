@@ -97,6 +97,8 @@ class fluid_2d {
         field* const fbase;
         /** A pointer to the (0,0) grid cell in the field array. */
         field* const fm;
+        /** An array containing the rigid objects. */
+        bool* rigid;
         /** An array containing the tracer positions. */
         double* const tm;
         /** An array for the source terms used during the algebraic
@@ -146,6 +148,7 @@ class fluid_2d {
         inline void fluid_stress(field* fp,double &s1f,double &s2f);
         template<bool left>
         inline void collision_stress(int ij,double &s1,double &s2,obj_field **collt,int k);
+        void init_rigid_objects();
         void init_fields();
         void init_fields_bend();
         void read_fields(const int& type);
@@ -212,6 +215,7 @@ class fluid_2d {
         void update_reference_map(const double& dt);
         void compute_ustar(const double& dt);
         void update_velocity(const double& dt);
+        void set_rigid_objects();
         void set_boundaries();
         void set_boundaries_solid();
         void edge_boundary_conditions();
