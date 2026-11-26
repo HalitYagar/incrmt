@@ -22,21 +22,24 @@ bool parse_int(const std::string &value,int &result) {
     long parsed;
     errno=0;
     parsed=strtol(value.c_str(),&end,10);
-    if(errno==ERANGE||end==value.c_str()||*end!='\0')
+    if(errno==ERANGE||end==value.c_str()||*end!='\0'||
+       parsed<-2147483647L-1||parsed>2147483647L)
         return false;
     result=static_cast<int>(parsed);
-    return parsed>=-2147483647L-1&&parsed<=2147483647L;
+    return true;
 }
 
 bool parse_unsigned(const std::string &value,unsigned int &result) {
     char *end;
     unsigned long parsed;
+    if(!value.empty()&&value[0]=='-') return false;
     errno=0;
     parsed=strtoul(value.c_str(),&end,10);
-    if(errno==ERANGE||end==value.c_str()||*end!='\0')
+    if(errno==ERANGE||end==value.c_str()||*end!='\0'||
+       parsed>4294967295UL)
         return false;
     result=static_cast<unsigned int>(parsed);
-    return parsed<=4294967295UL;
+    return true;
 }
 
 bool parse_double(const std::string &value,double &result) {
@@ -60,7 +63,7 @@ bool parse_bool(const std::string &value,bool &result) {
 
 template<class T>
 bool set_value(const std::string &key,const std::string &value,T &result,
-              bool (*parser)(const std::string &,T &),std::string &error) {
+               bool (*parser)(const std::string &,T &),std::string &error) {
     if(!parser(value,result)) {
         error="invalid value for '" + key + "': " + value;
         return false;
@@ -68,8 +71,8 @@ bool set_value(const std::string &key,const std::string &value,T &result,
     return true;
 }
 
-bool set_config_value(const std::string &key,const std::string &value,
-                      simulation_config &config,std::string &error) {
+bool set_simulation_value(const std::string &key,const std::string &value,
+                          simulation_config &config,std::string &error) {
 #define SET_INT(name, field) \
     if(key==name) return set_value(key,value,config.field,parse_int,error)
 #define SET_UNSIGNED(name, field) \
@@ -80,6 +83,7 @@ bool set_config_value(const std::string &key,const std::string &value,
     if(key==name) return set_value(key,value,config.field,parse_bool,error)
 
     SET_INT("grid_resolution",grid_resolution);
+    SET_INT("grid_aspect_ratio",grid_aspect_ratio);
     SET_INT("num_frames",num_frames);
     SET_INT("num_tracers",num_tracers);
     SET_UNSIGNED("output_flags",output_flags);
@@ -90,18 +94,15 @@ bool set_config_value(const std::string &key,const std::string &value,
     SET_DOUBLE("solid_density",solid_density);
     SET_DOUBLE("viscosity",viscosity);
     SET_DOUBLE("shear_modulus",shear_modulus);
+    SET_DOUBLE("reynolds_number",reynolds_number);
+    SET_DOUBLE("flow_speed",flow_speed);
     SET_DOUBLE("extra_viscosity_multiplier",extra_viscosity_multiplier);
     SET_DOUBLE("transition_viscosity_multiplier",
                transition_viscosity_multiplier);
     SET_DOUBLE("timestep_padding",timestep_padding);
     SET_DOUBLE("viscosity_timestep_padding",viscosity_timestep_padding);
     SET_BOOL("set_velocity",set_velocity);
-    SET_DOUBLE("circle_x",circle_x);
-    SET_DOUBLE("circle_y",circle_y);
-    SET_DOUBLE("circle_radius",circle_radius);
-    SET_DOUBLE("circle_velocity_x",circle_velocity_x);
-    SET_DOUBLE("circle_velocity_y",circle_velocity_y);
-    SET_DOUBLE("circle_angular_velocity",circle_angular_velocity);
+    SET_BOOL("solid_periodic_boundary",solid_periodic_boundary);
     SET_DOUBLE("domain_x_min",domain_x_min);
     SET_DOUBLE("domain_x_max",domain_x_max);
     SET_DOUBLE("domain_y_min",domain_y_min);
@@ -115,22 +116,100 @@ bool set_config_value(const std::string &key,const std::string &value,
 #undef SET_BOOL
 
     if(key=="output_name") {
-        if(value.empty()) {
-            error="output_name cannot be empty";
-            return false;
-        }
         config.output_name=value;
         return true;
     }
-    error="unknown configuration key: " + key;
+    if(key=="flow_type") {
+        if(value!="horizontal"&&value!="zero") {
+            error="flow_type must be 'horizontal' or 'zero'";
+            return false;
+        }
+        config.flow_type=value;
+        return true;
+    }
+    error="unknown simulation key: " + key;
+    return false;
+}
+
+bool set_object_value(const std::string &key,const std::string &value,
+                      object_config &object,std::string &error) {
+#define SET_DOUBLE(name, field) \
+    if(key==name) return set_value(key,value,object.field,parse_double,error)
+#define SET_BOOL(name, field) \
+    if(key==name) return set_value(key,value,object.field,parse_bool,error)
+
+    SET_BOOL("rigid",rigid);
+    SET_BOOL("material_enabled",material_enabled);
+    SET_BOOL("tracked",tracked);
+    SET_DOUBLE("center_x",center_x);
+    SET_DOUBLE("center_y",center_y);
+    SET_DOUBLE("radius",radius);
+    SET_DOUBLE("half_width",half_width);
+    SET_DOUBLE("half_height",half_height);
+    SET_DOUBLE("rotation",rotation);
+    SET_DOUBLE("gravity",gravity);
+    SET_DOUBLE("velocity_x",velocity_x);
+    SET_DOUBLE("velocity_y",velocity_y);
+    SET_DOUBLE("angular_velocity",angular_velocity);
+    SET_DOUBLE("ellipse_offset_x",ellipse_offset_x);
+    SET_DOUBLE("ellipse_offset_y",ellipse_offset_y);
+    SET_DOUBLE("ellipse_radius_x",ellipse_radius_x);
+    SET_DOUBLE("ellipse_radius_y",ellipse_radius_y);
+    SET_DOUBLE("shape_blend",shape_blend);
+    SET_DOUBLE("rigid_offset",rigid_offset);
+    SET_DOUBLE("shear_modulus",shear_modulus);
+    SET_DOUBLE("solid_density",solid_density);
+    SET_BOOL("set_velocity",set_velocity);
+    SET_DOUBLE("spin_scale",spin_scale);
+    SET_DOUBLE("spin_a1",spin_a1);
+    SET_DOUBLE("spin_a2",spin_a2);
+    SET_DOUBLE("spin_pivot_radius",spin_pivot_radius);
+    SET_DOUBLE("spin_max_angle",spin_max_angle);
+    SET_DOUBLE("spin_angular_velocity",spin_angular_velocity);
+
+#undef SET_DOUBLE
+#undef SET_BOOL
+
+    if(key=="shape") {
+        if(value!="circle"&&value!="square"&&value!="rectangle"&&
+           value!="triangle"&&value!="rect_ellipse"&&value!="csg"&&
+           value!="ellipse"&&value!="spinner") {
+            error="unknown object shape: " + value;
+            return false;
+        }
+        object.shape=value;
+        return true;
+    }
+    if(key=="shape_operation") {
+        if(value!="union"&&value!="intersect"&&value!="diff"&&
+           value!="diffrev"&&value!="rect"&&value!="ellipse") {
+            error="unknown shape_operation: " + value;
+            return false;
+        }
+        object.shape_operation=value;
+        return true;
+    }
+    error="unknown object key: " + key;
     return false;
 }
 
 }
 
+object_config::object_config() :
+    rigid(false),material_enabled(true),tracked(false),
+    center_x(0.),center_y(0.),radius(0.25),half_width(0.5),half_height(0.5),
+    rotation(0.),gravity(0.),velocity_x(0.),velocity_y(0.),
+    angular_velocity(0.),ellipse_offset_x(0.),ellipse_offset_y(0.),
+    ellipse_radius_x(0.25),ellipse_radius_y(0.25),
+    shape_operation("union"),shape_blend(0.),rigid_offset(0.),
+    shear_modulus(24.),solid_density(4.),set_velocity(true),
+    spin_scale(0.8),spin_a1(0.5),spin_a2(0.125),spin_pivot_radius(0.2),
+    spin_max_angle(3.141592653589793),spin_angular_velocity(1.) {}
+
 simulation_config default_config() {
     simulation_config config;
     config.grid_resolution=128;
+    config.grid_aspect_ratio=1;
     config.duration=3.;
     config.num_frames=10;
     config.transition_width=2.5;
@@ -141,24 +220,22 @@ simulation_config default_config() {
     config.solid_density=4.;
     config.viscosity=1e-3;
     config.shear_modulus=24.;
+    config.reynolds_number=0.;
+    config.flow_speed=1.;
+    config.flow_type="zero";
     config.extra_viscosity_multiplier=0.8;
     config.transition_viscosity_multiplier=1.;
     config.timestep_padding=0.4;
     config.viscosity_timestep_padding=0.8;
     config.set_velocity=true;
-    config.output_name="circ-move";
+    config.solid_periodic_boundary=false;
+    config.output_name="simulation";
     config.domain_x_min=-1.;
     config.domain_x_max=1.;
     config.domain_y_min=-1.;
     config.domain_y_max=1.;
     config.periodic_x=false;
     config.periodic_y=false;
-    config.circle_x=-0.5;
-    config.circle_y=-0.5;
-    config.circle_radius=0.25;
-    config.circle_velocity_x=2.;
-    config.circle_velocity_y=4.;
-    config.circle_angular_velocity=24.;
     return config;
 }
 
@@ -170,6 +247,9 @@ bool load_config(const char *filename,simulation_config &config,
         return false;
     }
 
+    enum section_type { NO_SECTION, SIMULATION_SECTION, OBJECT_SECTION };
+    section_type section=NO_SECTION;
+    bool simulation_seen=false;
     std::string line;
     int line_number=0;
     while(std::getline(input,line)) {
@@ -178,6 +258,38 @@ bool load_config(const char *filename,simulation_config &config,
         if(comment!=std::string::npos) line.erase(comment);
         line=trim(line);
         if(line.empty()) continue;
+
+        if(line=="[simulation]") {
+            if(simulation_seen||!config.objects.empty()) {
+                error="the [simulation] section must appear once before objects";
+            } else {
+                simulation_seen=true;
+                section=SIMULATION_SECTION;
+            }
+            if(!error.empty()) {
+                std::ostringstream message;
+                message<<"line "<<line_number<<": "<<error;
+                error=message.str();
+                return false;
+            }
+            continue;
+        }
+        if(line=="[object]") {
+            if(!simulation_seen||section==NO_SECTION) {
+                error="the [simulation] section must precede every [object]";
+                std::ostringstream message;
+                message<<"line "<<line_number<<": "<<error;
+                error=message.str();
+                return false;
+            }
+            config.objects.push_back(object_config());
+            object_config &object=config.objects.back();
+            object.shear_modulus=config.shear_modulus;
+            object.solid_density=config.solid_density;
+            object.set_velocity=config.set_velocity;
+            section=OBJECT_SECTION;
+            continue;
+        }
 
         std::string::size_type separator=line.find('=');
         if(separator==std::string::npos) {
@@ -188,18 +300,25 @@ bool load_config(const char *filename,simulation_config &config,
         }
         std::string key=trim(line.substr(0,separator));
         std::string value=trim(line.substr(separator+1));
-        if(key.empty()||value.empty()) {
+        if(section==NO_SECTION||key.empty()||value.empty()) {
             std::ostringstream message;
-            message<<"line "<<line_number<<" has an empty key or value";
+            message<<"line "<<line_number<<" has a key/value outside a section or an empty key/value";
             error=message.str();
             return false;
         }
-        if(!set_config_value(key,value,config,error)) {
+        bool ok=section==SIMULATION_SECTION?
+            set_simulation_value(key,value,config,error):
+            set_object_value(key,value,config.objects.back(),error);
+        if(!ok) {
             std::ostringstream message;
             message<<"line "<<line_number<<": "<<error;
             error=message.str();
             return false;
         }
+    }
+    if(!simulation_seen) {
+        error="configuration is missing the [simulation] section";
+        return false;
     }
     return validate_config(config,error);
 }
@@ -207,6 +326,9 @@ bool load_config(const char *filename,simulation_config &config,
 bool validate_config(const simulation_config &config,std::string &error) {
     if(config.grid_resolution<20||config.grid_resolution>65536)
         error="grid_resolution must be between 20 and 65536";
+    else if(config.grid_aspect_ratio<1||
+            config.grid_resolution>65536/config.grid_aspect_ratio)
+        error="grid aspect ratio produces an unsupported grid";
     else if(config.duration<=0)
         error="duration must be positive";
     else if(config.num_frames<=0)
@@ -219,6 +341,8 @@ bool validate_config(const simulation_config &config,std::string &error) {
         error="fluid_density and solid_density must be positive";
     else if(config.viscosity<=0||config.shear_modulus<=0)
         error="viscosity and shear_modulus must be positive";
+    else if(config.reynolds_number<0)
+        error="reynolds_number cannot be negative";
     else if(config.extra_viscosity_multiplier<=0||
             config.transition_viscosity_multiplier<=0||
             config.timestep_padding<=0||
@@ -226,12 +350,70 @@ bool validate_config(const simulation_config &config,std::string &error) {
         error="viscosity and timestep multipliers must be positive";
     else if(config.output_name.empty())
         error="output_name cannot be empty";
-    else if(config.circle_radius<=0)
-        error="circle_radius must be positive";
     else if(config.domain_x_min>=config.domain_x_max||
             config.domain_y_min>=config.domain_y_max)
         error="domain minimums must be less than maximums";
-    else
+    else {
+        for(unsigned int i=0;i<config.objects.size();i++) {
+            const object_config &object=config.objects[i];
+            if(object.shape.empty()) {
+                error="every [object] section must specify shape";
+                return false;
+            }
+            if(object.material_enabled&&
+               (object.shear_modulus<=0||object.solid_density<=0)) {
+                error="object material properties must be positive";
+                return false;
+            }
+            if(object.rigid&&object.shape=="spinner") {
+                error="spinner cannot be used as a rigid mask; add a rigid geometry object";
+                return false;
+            }
+            if(!object.material_enabled&&!object.rigid) {
+                error="an object without material must define a rigid mask";
+                return false;
+            }
+            if(object.tracked&&object.shape!="circle") {
+                error="tracked is supported only for circle objects";
+                return false;
+            }
+            if(object.tracked&&object.gravity!=0.) {
+                error="tracked circles do not support gravity";
+                return false;
+            }
+            if(object.gravity!=0.&&object.shape!="circle"&&
+               object.shape!="square"&&object.shape!="rectangle") {
+                error="gravity is supported only for circles and box objects";
+                return false;
+            }
+            if((object.shape=="circle"||object.shape=="square"||
+                object.shape=="triangle")&&object.radius<=0) {
+                error="circle, square, and triangle radii must be positive";
+                return false;
+            }
+            if((object.shape=="rectangle"||object.shape=="rect_ellipse"||
+                object.shape=="csg")&&
+               (object.half_width<=0||object.half_height<=0)) {
+                error="rectangle dimensions must be positive";
+                return false;
+            }
+            if((object.shape=="rect_ellipse"||object.shape=="csg"||
+                object.shape=="ellipse")&&
+               (object.ellipse_radius_x<=0||object.ellipse_radius_y<=0)) {
+                error="ellipse radii must be positive";
+                return false;
+            }
+            if(object.shape=="spinner"&&
+               (object.spin_scale<=0||object.spin_pivot_radius<=0)) {
+                error="spinner scale and pivot radius must be positive";
+                return false;
+            }
+            if(object.shape_blend<0) {
+                error="shape_blend cannot be negative";
+                return false;
+            }
+        }
         return true;
+    }
     return false;
 }

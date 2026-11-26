@@ -106,26 +106,56 @@ make
 This will build several executables such as **ftest**, **conv_test**, and
 **sediment**.
 
-The configurable circle simulation is run by passing a configuration file to
-**fconfig**:
+The configurable simulations are run by passing a configuration file to
+**fconfig**. Each file has one `[simulation]` section for shared grid, flow,
+material, and output settings, followed by any number of `[object]` sections.
+For example:
+```ini
+[simulation]
+grid_resolution = 128
+duration = 3.0
+num_frames = 300
+flow_type = zero
+fluid_density = 1.0
+solid_density = 4.0
+viscosity = 0.001
+shear_modulus = 24.0
+output_name = circ-move
+
+[object]
+shape = circle
+tracked = true
+center_x = -0.5
+center_y = -0.5
+radius = 0.25
+velocity_x = 2.0
+velocity_y = 4.0
+angular_velocity = 24.0
+```
+Object shapes include `circle`, `square`, `rectangle`, `triangle`,
+`rect_ellipse`, `csg`, `ellipse`, and `spinner`. Add another `[object]` block
+for every additional object. Object material properties inherit the simulation
+settings and can be overridden per object. Set `rigid = true` to make the
+object geometry a rigid grid mask; `material_enabled = false` is useful for a
+mask-only geometry. `tracked = true` enables the circle position/tracer output.
+`flow_type` can be `horizontal` or `zero`.
+
+Run a simulation directly with:
 ```Shell
 OMP_NUM_THREADS=4 ./fconfig sims/circ-move.cfg
 ```
-An optional second argument selects the output directory:
-```Shell
-./fconfig sims/circ-move.cfg output/my-run
-```
-Without the second argument, output is placed in **output/circ-move.odr**.
-It can also be run with the complete plotting workflow:
+An optional second argument selects the output directory. The complete plotting
+workflow, including video generation, is:
 ```Shell
 ./run_simulation.sh sims/circ-move.cfg
 ```
-The supplied **circ-move.cfg** file documents all available parameters. Lines
-beginning with `#` are comments, and values use `key = value` syntax.
-Each run creates a timestamped directory inside **output**, for example
-**output/run_20261120_105731**. The script passes this directory to
-**fconfig**, which creates **circ-move.odr** inside it. The configuration and
-generated movie are also stored in the same run directory.
+Each script run creates a timestamped directory inside **output**; it stores
+the simulation data, configuration, and generated movie there. All supplied
+presets use the section-based format. The presets cover the boundary spinner,
+moving and tracked circles, rigid and deformable rectangles, squares and
+triangles, CSG shapes, and multi-material T-shapes. Use
+`./fconfig --validate sims/<name>.cfg` to check a configuration without
+running the simulation.
 
 ## Example
 The simple three-pronged rotor example that described in Appendix C of the

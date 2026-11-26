@@ -49,8 +49,9 @@ void obj_square::accel(double x,double y,double X,double Y,
  * \param[in] cr_ the distance from the center to the triangle vertices.
  * \param[in] theta the rotation to apply to the triangle.
  * \param[in] grav_ the gravitational acceleration to apply. */
-obj_triangle::obj_triangle(double cx_,double cy_,double cr_,double theta,double grav_) :
-    obj_standard(cx_,cy_,cr_*0.5), grav(grav_) {
+obj_triangle::obj_triangle(double cx_,double cy_,double cr_,double theta,double grav_,
+                           double uu_,double vv_,double omega_) :
+    obj_standard(cx_,cy_,cr_*0.5,uu_,vv_,omega_), grav(grav_) {
     for(int i=0;i<3;i++) {
         nor[2*i]=cos(theta+2*M_PI/3*i);
         nor[2*i+1]=sin(theta+2*M_PI/3*i);
