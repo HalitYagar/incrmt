@@ -151,6 +151,22 @@ struct obj_square : public obj_standard {
                        double phiv,double &accx,double &accy);
 };
 
+/** \brief A rotated rectangle that can experience a downward acceleration. */
+class obj_rectangle : public obj_standard {
+    public:
+        const double half_width;
+        const double half_height;
+        const double cos_theta;
+        const double sin_theta;
+        const double grav;
+        obj_rectangle(double cx_,double cy_,double half_width_,
+                      double half_height_,double theta,double grav_=0.,
+                      double uu_=0.,double vv_=0.,double omega_=0.);
+        virtual double phi(double X,double Y);
+        virtual void accel(double x,double y,double X,double Y,
+                           double phiv,double &accx,double &accy);
+};
+
 /** \brief A class to define an equilateral triangle. */
 class obj_triangle : public obj_standard {
     public:
@@ -171,6 +187,19 @@ class obj_triangle : public obj_standard {
         inline double sp(double X,double Y,int k) {
             return X*nor[2*k]+Y*nor[2*k+1];
         }
+};
+
+/** \brief A right triangle with its right angle at the upper-right corner. */
+class obj_right_triangle : public obj_standard {
+    public:
+        const double half_width;
+        const double half_height;
+        const double cos_theta;
+        const double sin_theta;
+        obj_right_triangle(double cx_,double cy_,double half_width_,
+                           double half_height_,double theta,
+                           double uu_=0.,double vv_=0.,double omega_=0.);
+        virtual double phi(double X,double Y);
 };
 
 /** \brief A class to define a seven-pointed star. */

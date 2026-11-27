@@ -1,10 +1,25 @@
 #define _USE_MATH_DEFINES
 #include <cmath>
+#include <algorithm>
 
 #include "common.hh"
 #include "sim_type.hh"
 #include "obj_field.hh"
 #include "fluid_2d.hh"
+
+namespace {
+
+double point_segment_distance(double x,double y,double x1,double y1,
+                              double x2,double y2) {
+    double vx=x2-x1,vy=y2-y1;
+    double t=((x-x1)*vx+(y-y1)*vy)/(vx*vx+vy*vy);
+    if(t<0.) t=0.;
+    else if(t>1.) t=1.;
+    double dx=x-(x1+t*vx),dy=y-(y1+t*vy);
+    return sqrt(dx*dx+dy*dy);
+}
+
+}
 
 /** Calculates the initial velocity at a position, in terms of a constant
  * velocity plus an angular velocity around the object center.
@@ -40,6 +55,27 @@ void obj_circle::accel(double x,double y,double X,double Y,
  * \param[in,out] (accx,accy) the acceleration vector to add to. */
 void obj_square::accel(double x,double y,double X,double Y,
                        double phiv,double &accx,double &accy) {
+    accy-=grav*op->trans_func_in(phiv);
+}
+
+obj_rectangle::obj_rectangle(double cx_,double cy_,double half_width_,
+                             double half_height_,double theta,double grav_,
+                             double uu_,double vv_,double omega_) :
+    obj_standard(cx_,cy_,std::max(half_width_,half_height_),uu_,vv_,omega_),
+    half_width(half_width_),half_height(half_height_),
+    cos_theta(cos(theta)),sin_theta(sin(theta)),grav(grav_) {}
+
+double obj_rectangle::phi(double X,double Y) {
+    double x=cos_theta*X+sin_theta*Y;
+    double y=-sin_theta*X+cos_theta*Y;
+    double qx=fabs(x)-half_width;
+    double qy=fabs(y)-half_height;
+    double ox=std::max(qx,0.),oy=std::max(qy,0.);
+    return sqrt(ox*ox+oy*oy)+std::min(std::max(qx,qy),0.);
+}
+
+void obj_rectangle::accel(double x,double y,double X,double Y,
+                          double phiv,double &accx,double &accy) {
     accy-=grav*op->trans_func_in(phiv);
 }
 
@@ -93,6 +129,29 @@ double obj_square::phi(double X,double Y) {
  * \return The level set function. */
 double obj_triangle::phi(double X,double Y) {
     return sp(Y,-X,sp(X,Y,0)>0?(sp(X,Y,1)>0?0:2):(sp(X,Y,2)>0?1:0))-cr;
+}
+
+obj_right_triangle::obj_right_triangle(double cx_,double cy_,
+                                       double half_width_,
+                                       double half_height_,double theta,
+                                       double uu_,double vv_,double omega_) :
+    obj_standard(cx_,cy_,std::max(half_width_,half_height_),uu_,vv_,omega_),
+    half_width(half_width_),half_height(half_height_),
+    cos_theta(cos(theta)),sin_theta(sin(theta)) {}
+
+double obj_right_triangle::phi(double X,double Y) {
+    double x=cos_theta*X+sin_theta*Y;
+    double y=-sin_theta*X+cos_theta*Y;
+    double x1=-half_width,y1=half_height;
+    double x2=half_width,y2=half_height;
+    double x3=half_width,y3=-half_height;
+    double distance=std::min(point_segment_distance(x,y,x1,y1,x2,y2),
+                             point_segment_distance(x,y,x2,y2,x3,y3));
+    distance=std::min(distance,
+                      point_segment_distance(x,y,x3,y3,x1,y1));
+    bool inside=x<=half_width&&y<=half_height&&
+        x/half_width+y/half_height>=0.;
+    return inside?-distance:distance;
 }
 
 /** Sets up the seven-pointed star shape, by computing constants for applying

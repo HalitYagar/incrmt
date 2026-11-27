@@ -132,13 +132,16 @@ velocity_x = 2.0
 velocity_y = 4.0
 angular_velocity = 24.0
 ```
-Object shapes include `circle`, `square`, `rectangle`, `triangle`,
-`rect_ellipse`, `csg`, `ellipse`, and `spinner`. Add another `[object]` block
-for every additional object. Object material properties inherit the simulation
-settings and can be overridden per object. Set `rigid = true` to make the
-object geometry a rigid grid mask; `material_enabled = false` is useful for a
-mask-only geometry. `tracked = true` enables the circle position/tracer output.
-`flow_type` can be `horizontal` or `zero`.
+Object shapes include `circle`, `square`, `rectangle`, equilateral `triangle`,
+`right_triangle`, and `spinner`. Squares and rectangles use `half_width`,
+`half_height`, and `rotation`. The `right_triangle` shape uses those same
+settings; its right angle is at the upper-right corner of its bounding box.
+Add another `[object]` block for every additional object. Object material
+properties inherit the simulation settings and can be overridden per object.
+Set `rigid = true` to make the object geometry a rigid grid mask;
+`material_enabled = false` is useful for a mask-only geometry. `tracked = true`
+enables the circle position/tracer output. `flow_type` can be `horizontal` or
+`zero`.
 
 Run a simulation directly with:
 ```Shell
@@ -151,9 +154,8 @@ workflow, including video generation, is:
 ```
 Each script run creates a timestamped directory inside **output**; it stores
 the simulation data, configuration, and generated movie there. All supplied
-presets use the section-based format. The presets cover the boundary spinner,
-moving and tracked circles, rigid and deformable rectangles, squares and
-triangles, CSG shapes, and multi-material T-shapes. Use
+presets use the section-based format and demonstrate moving or tracked circles
+and circle/geometry arrangements. Use
 `./fconfig --validate sims/<name>.cfg` to check a configuration without
 running the simulation.
 

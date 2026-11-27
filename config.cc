@@ -151,11 +151,6 @@ bool set_object_value(const std::string &key,const std::string &value,
     SET_DOUBLE("velocity_x",velocity_x);
     SET_DOUBLE("velocity_y",velocity_y);
     SET_DOUBLE("angular_velocity",angular_velocity);
-    SET_DOUBLE("ellipse_offset_x",ellipse_offset_x);
-    SET_DOUBLE("ellipse_offset_y",ellipse_offset_y);
-    SET_DOUBLE("ellipse_radius_x",ellipse_radius_x);
-    SET_DOUBLE("ellipse_radius_y",ellipse_radius_y);
-    SET_DOUBLE("shape_blend",shape_blend);
     SET_DOUBLE("rigid_offset",rigid_offset);
     SET_DOUBLE("shear_modulus",shear_modulus);
     SET_DOUBLE("solid_density",solid_density);
@@ -172,21 +167,12 @@ bool set_object_value(const std::string &key,const std::string &value,
 
     if(key=="shape") {
         if(value!="circle"&&value!="square"&&value!="rectangle"&&
-           value!="triangle"&&value!="rect_ellipse"&&value!="csg"&&
-           value!="ellipse"&&value!="spinner") {
+           value!="triangle"&&value!="right_triangle"&&
+           value!="spinner") {
             error="unknown object shape: " + value;
             return false;
         }
         object.shape=value;
-        return true;
-    }
-    if(key=="shape_operation") {
-        if(value!="union"&&value!="intersect"&&value!="diff"&&
-           value!="diffrev"&&value!="rect"&&value!="ellipse") {
-            error="unknown shape_operation: " + value;
-            return false;
-        }
-        object.shape_operation=value;
         return true;
     }
     error="unknown object key: " + key;
@@ -199,9 +185,7 @@ object_config::object_config() :
     rigid(false),material_enabled(true),tracked(false),
     center_x(0.),center_y(0.),radius(0.25),half_width(0.5),half_height(0.5),
     rotation(0.),gravity(0.),velocity_x(0.),velocity_y(0.),
-    angular_velocity(0.),ellipse_offset_x(0.),ellipse_offset_y(0.),
-    ellipse_radius_x(0.25),ellipse_radius_y(0.25),
-    shape_operation("union"),shape_blend(0.),rigid_offset(0.),
+    angular_velocity(0.),rigid_offset(0.),
     shear_modulus(24.),solid_density(4.),set_velocity(true),
     spin_scale(0.8),spin_a1(0.5),spin_a2(0.125),spin_pivot_radius(0.2),
     spin_max_angle(3.141592653589793),spin_angular_velocity(1.) {}
@@ -391,25 +375,15 @@ bool validate_config(const simulation_config &config,std::string &error) {
                 error="circle, square, and triangle radii must be positive";
                 return false;
             }
-            if((object.shape=="rectangle"||object.shape=="rect_ellipse"||
-                object.shape=="csg")&&
+            if((object.shape=="rectangle"||
+                object.shape=="right_triangle")&&
                (object.half_width<=0||object.half_height<=0)) {
-                error="rectangle dimensions must be positive";
-                return false;
-            }
-            if((object.shape=="rect_ellipse"||object.shape=="csg"||
-                object.shape=="ellipse")&&
-               (object.ellipse_radius_x<=0||object.ellipse_radius_y<=0)) {
-                error="ellipse radii must be positive";
+                error="object half-width and half-height must be positive";
                 return false;
             }
             if(object.shape=="spinner"&&
                (object.spin_scale<=0||object.spin_pivot_radius<=0)) {
                 error="spinner scale and pivot radius must be positive";
-                return false;
-            }
-            if(object.shape_blend<0) {
-                error="shape_blend cannot be negative";
                 return false;
             }
         }

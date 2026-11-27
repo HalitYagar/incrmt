@@ -37,4 +37,4 @@ fi
 cp "$config_file" "$run_dir/$simulation_name.cfg"
 
 echo "Generating plot and movie..." >&2
-./gnuplot_movie.pl -t "$odr" w -10 10 2>&1 | tee -a "$log_file"
+./gnuplot_movie.pl -t -u "$odr" w -10 10 2>&1 | tee -a "$log_file"

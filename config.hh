@@ -19,12 +19,6 @@ struct object_config {
     double velocity_x;
     double velocity_y;
     double angular_velocity;
-    double ellipse_offset_x;
-    double ellipse_offset_y;
-    double ellipse_radius_x;
-    double ellipse_radius_y;
-    std::string shape_operation;
-    double shape_blend;
     double rigid_offset;
     double shear_modulus;
     double solid_density;

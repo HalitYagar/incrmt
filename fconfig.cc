@@ -8,9 +8,6 @@
 #include "obj_field.hh"
 #include "fluid_2d.hh"
 #include "sim_type.hh"
-#include "examples/config_rect.hh"
-#include "examples/obj_rect_ellipse.hh"
-#include "examples/obj_csg_shape.hh"
 
 struct configured_object {
     object *shape;
@@ -60,32 +57,21 @@ static object *make_object(const object_config &config,const char *filename,
                 config.angular_velocity,config.gravity);
         }
     } else if(config.shape=="square") {
-        shape=new configured_rect(config.center_x,config.center_y,
-            config.radius,config.radius,config.rotation,config.velocity_x,
-            config.velocity_y,config.angular_velocity,config.gravity);
+        shape=new obj_rectangle(config.center_x,config.center_y,
+            config.radius,config.radius,config.rotation,config.gravity,
+            config.velocity_x,config.velocity_y,config.angular_velocity);
     } else if(config.shape=="rectangle") {
-        shape=new configured_rect(config.center_x,config.center_y,
+        shape=new obj_rectangle(config.center_x,config.center_y,
             config.half_width,config.half_height,config.rotation,
-            config.velocity_x,config.velocity_y,config.angular_velocity,
-            config.gravity);
+            config.gravity,config.velocity_x,config.velocity_y,
+            config.angular_velocity);
     } else if(config.shape=="triangle") {
         shape=new obj_triangle(config.center_x,config.center_y,config.radius,
             config.rotation,config.gravity,config.velocity_x,
             config.velocity_y,config.angular_velocity);
-    } else if(config.shape=="rect_ellipse") {
-        shape=new obj_rect_ellipse(config.center_x,config.center_y,
-            config.half_width,config.half_height,config.ellipse_offset_x,
-            config.ellipse_offset_y,config.ellipse_radius_x,
-            config.ellipse_radius_y,config.velocity_x,config.velocity_y,
-            config.angular_velocity);
-    } else if(config.shape=="csg"||config.shape=="ellipse") {
-        csg_op operation=CSG_ELLIPSE_ONLY;
-        if(config.shape=="csg")
-            csg_op_parse(config.shape_operation.c_str(),operation);
-        shape=new obj_csg_shape(config.center_x,config.center_y,
-            config.half_width,config.half_height,config.ellipse_offset_x,
-            config.ellipse_offset_y,config.ellipse_radius_x,
-            config.ellipse_radius_y,operation,config.shape_blend,
+    } else if(config.shape=="right_triangle") {
+        shape=new obj_right_triangle(config.center_x,config.center_y,
+            config.half_width,config.half_height,config.rotation,
             config.velocity_x,config.velocity_y,config.angular_velocity);
     } else if(config.shape=="spinner") {
         shape=new obj_simple_spin(config.spin_scale,config.spin_a1,
