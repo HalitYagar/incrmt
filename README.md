@@ -155,7 +155,9 @@ workflow, including video generation, is:
 Each script run creates a timestamped directory inside **output**; it stores
 the simulation data, configuration, and generated movie there. All supplied
 presets use the section-based format and demonstrate moving or tracked circles
-and circle/geometry arrangements. Use
+and circle/geometry arrangements. If a simulation fails after writing frames,
+the script attempts to make a video from the partial output and still returns
+the simulation's failure status. Use
 `./fconfig --validate sims/<name>.cfg` to check a configuration without
 running the simulation.
 

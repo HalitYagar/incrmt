@@ -27,14 +27,47 @@ if [ -z "$simulation_name" ]; then
 fi
 
 echo "Running fconfig..." >&2
-stdbuf -oL -eL ./fconfig "$config_file" "$run_dir" 2>&1 | tee -a "$log_file"
+simulation_status=0
+if stdbuf -oL -eL ./fconfig "$config_file" "$run_dir" 2>&1 | tee -a "$log_file"; then
+    :
+else
+    simulation_status=$?
+    echo "Simulation failed with status $simulation_status; checking for partial output." >&2
+fi
 
 odr="$run_dir/$simulation_name.odr"
 if [ ! -d "$odr" ]; then
     echo "Simulation output directory not found: $odr" >&2
+    if [ "$simulation_status" -ne 0 ]; then
+        exit "$simulation_status"
+    fi
     exit 1
 fi
 cp "$config_file" "$run_dir/$simulation_name.cfg"
 
-echo "Generating plot and movie..." >&2
-./gnuplot_movie.pl -t -u "$odr" w -10 10 2>&1 | tee -a "$log_file"
+movie_file="$run_dir/${simulation_name}_w.mov"
+movie_status=0
+if [ ! -f "$odr/w.0" ]; then
+    echo "No initial vorticity frame found in $odr; skipping plot/movie generation." >&2
+    movie_status=1
+else
+    echo "Generating plot and movie from available frames..." >&2
+    if ./gnuplot_movie.pl -t -u "$odr" w -10 10 2>&1 | tee -a "$log_file"; then
+        if [ ! -s "$movie_file" ]; then
+            echo "Movie was not created: $movie_file" >&2
+            movie_status=1
+        fi
+    else
+        movie_status=$?
+        echo "Plot/movie generation failed with status $movie_status." >&2
+    fi
+fi
+
+if [ "$simulation_status" -ne 0 ]; then
+    if [ "$movie_status" -eq 0 ]; then
+        echo "Video from partial simulation output: $movie_file" >&2
+    fi
+    exit "$simulation_status"
+fi
+
+exit "$movie_status"
